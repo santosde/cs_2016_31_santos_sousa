@@ -1,0 +1,199 @@
+#include<stdio.h>
+#include<stdlib.h>
+int jogo[9][9];//essa matriz armazena o jogo inicial-posiçao na coluna, posiçao na linha
+int save_jogo[100][9][9];//essa e a de baixo funcionam como um "memory card" para o programa
+int save_ppalp[100], save_palpv[100], num_save=0, save_x[100], save_y[100];
+void capt(void)//essa funçao faz a captura do jogo e armazena na matriz jogo
+{
+int a;
+for(a=0; a<9; a++)
+{
+printf("\n Digite o conteudo da %da linha,\n\n substituindo os espacos por 0\n\n e separando os algarismos\n\n", a+1);
+fflush(stdin);
+scanf("%d %d %d %d %d %d %d %d %d", &jogo[a][0], &jogo[a][1], &jogo[a][2], &jogo[a][3], &jogo[a][4], &jogo[a][5], &jogo[a][6], &jogo[a][7], &jogo[a][8]);
+printf("\n\n");
+}
+}
+void most(void)//essa funçao exibe na tela o conteudo da matriz jogo
+{
+int a, b;
+for(a=0; a<9; a++)
+{
+for(b=0; b<9; b++)
+{
+if(b==8)
+{
+printf(" %d \n\n", jogo[a]);
+}
+else
+{
+printf(" %d ", jogo[a]);
+}
+}
+}
+}
+void load(void)//essa funçao carrega o jogo para um estado em que a maquina teve uma "duvida" e optou por um caminho que levou a um jogo perdido
+{
+int a, b;
+num_save=num_save-1;
+for(a=0; a<9; a++)
+{
+for(b=0; b<9; b++)
+{
+jogo[a]=save_jogo[num_save][a];
+}
+}
+jogo[save_x[num_save]][save_y[num_save]]=save_palpv[num_save];
+}
+int calc(int x, int y, int sinal)//essa funçao é a cabeça do programa, ela examina cada casa de cada celula e acha um numero obvio para ela, caso o numero nao seja obvio, ela salva o jogo e chuta um resultado
+{
+int lin[9], col[9], grupo[9];
+int palp, a, b, d, palpv=0, ppalp=0, numpos=0;
+for(a=0; a<9; a++)
+{
+lin[a]=jogo[x][a];
+}
+for(a=0; a<9; a++)
+{
+col[a]=jogo[a][y];
+}
+int c, l;//a partir daqui, a funçao tenta achar o numero da casa
+if(x<3 && y<3)c=0, l=0;
+if(x<3 && y>2 && y<6)c=0, l=3;
+if(x<3 && y>5)c=0, l=6;
+if(x>2 && x<6 && y<3)c=3, l=0;
+if(x>2 && x<6 && y >2 && y<6)c=3, l=3;
+if(x>2 && x<6 && y>5)c=3, l=6;
+if(x>5 && y<3)c=6, l=0;
+if(x>5 && y>2 && y<6)c=6, l=3;
+if(x>5 && y>5)c=6, l=6;
+grupo[0]=jogo[c][l];
+grupo[1]=jogo[c][l+1];
+grupo[2]=jogo[c][l+2];
+grupo[3]=jogo[c+1][l];
+grupo[4]=jogo[c+1][l+1];
+grupo[5]=jogo[c+1][l+2];
+grupo[6]=jogo[c+2][l];
+grupo[7]=jogo[c+2][l+1];
+grupo[8]=jogo[c+2][l+2];
+for(palp=1; palp<10; palp++)
+{
+d=0;
+for(a=0; a<9; a++)
+{
+if(palp==lin[a])d++;
+}
+for(a=0; a<9; a++)
+{
+if(palp==col[a])d++;
+}
+for(a=0; a<9; a++)
+{
+if(palp==grupo[a])d++;
+}
+if(d==0)
+{
+ppalp=palpv;
+palpv=palp;
+numpos++;
+}
+}
+if(numpos==1)return(palpv);//se um numero obvio é encontrado, ele é gravado na matriz jogo
+if(sinal==1 && numpos==2)
+{
+save_ppalp[num_save]=ppalp;
+save_palpv[num_save]=palpv;
+save_x[num_save]=x;
+save_y[num_save]=y;
+for(a=0; a<9; a++)
+{
+for(b=0; b<9; b++)
+{
+save_jogo[num_save][a]=jogo[a];
+}
+}
+num_save++;
+return(ppalp);
+}
+return(0);
+}
+main()
+{
+char resposta;
+puts("\n Programa para resolver jogos sudoku\n");
+system("pause");
+inicio:
+int a, b, c=0, d=0, sinal=0, loop=0;
+int retorno;
+capt();
+while(c!=405)
+{
+for(a=0; a<9; a++)
+{
+for(b=0; b<9; b++)
+{
+if(jogo[a]==0)
+{
+retorno=calc(a, b, sinal);
+jogo[a]=retorno;
+if(retorno!=0)
+{
+loop=0;
+sinal=0;
+}
+}
+}
+}
+c=0;
+for(a=0; a<9; a++)
+{
+for(b=0; b<9; b++)
+{
+c=c+jogo[a];
+}
+}
+if(d==c)
+{
+loop++;//sinal e loop sao informaçoes de trabalho para a funçao calc
+sinal=1;
+}
+d=c;
+if(loop==2)load();
+if(loop>2)
+{
+puts("\n Erro ao calcular\n");
+system("pause");
+break;
+}
+}
+most();
+ate_aqui:
+puts("\n Calcular novamente? - s = sim , n=nao\n");//aqui o programa verifica se o usuario quer calcular outro jogo
+fflush(stdin);
+scanf("%c", &resposta);
+while(resposta!='s' && resposta!='n')
+{
+puts("\n Resposta invalida\n");
+goto ate_aqui;
+}
+if(resposta=='s')
+{
+for(a=0; a<9; a++)
+{
+for(b=0; b<9; b++)
+{
+jogo[a]=0;
+}
+}
+num_save=0;
+d=0;
+sinal=0;
+loop=0;
+c=0;
+goto inicio;
+}
+if(resposta=='n')
+{
+return(0);
+}
+}
